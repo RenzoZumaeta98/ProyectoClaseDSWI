@@ -9,7 +9,7 @@
     <div class="col-md-12">
 
 
-        <table class="table">
+        <table id="tbl" class="table">
             <thead>
                 <tr>
                     <th>Id</th>
@@ -28,8 +28,10 @@
                     <td>@item.Price</td>
                     <td>@item.Stock</td>
                     <td>
-                            <a class="btn btn-success" asp-controller="Product" asp-action="Edit"><i class="fa-solid fa-pen-nib"></i></a>
-                            <a class="btn btn-danger"><i class="fa-solid fa-trash"></i></a>
+                            <!--EN onClick solo deben ir funciones JavasScript-->
+                            <a class="btn btn-warning" onclick="ProductDetails(@item.Id)"><i class="fa-solid fa-info"></i></a>
+                            <a class="btn btn-success" asp-controller="Product" asp-action="Edit" asp-route-id="@item.Id"><i class="fa-solid fa-pen-nib"></i></a>
+                            <a class="btn btn-danger" onclick="DeleteProduct(@item.Id)"><i class="fa-solid fa-trash"></i></a>
                     </td>
                 </tr>
             }
@@ -47,4 +49,79 @@
 
     </div>
 </div>
+
+@section Scripts {
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+
+            new DataTable('#tbl');
+        });
+
+       
+        //const porque las funciones deben ser invariables
+        const DeleteProduct = (id) => {
+
+            if (!confirm("Esta seguro que desea eliminar el registro?")) return;
+
+            $.ajax({
+                        type: "GET", //Usar GET para listar y eliminar //Usar POST para Insertar y actualizar
+                        url: '@Url.Action("DeleteProd", "Product")' + '/' + id,
+                        success: function (data) {          //Esto hara cuando todo este bien //data es todo lo que devuelve .NET o el return que se puso al metodo en PeoductController
+                            alert(data); 
+                            window.location.href = window.location.href;
+                        },
+                        error: function () {
+                            alert("Algo salio mal");        //Esto hara cuando algo salga mal
+                        }
+
+
+                    });
+        }
+
+        //Funcion para obtener detalles del producto en un alert
+        const ProductDetails = (id) => {
+            $.ajax({
+                type: 'GET',
+                url: '@Url.Action("GetProductDetail","Product")' + '/' + id,
+                success: (data) => {                        //  En este caso, el data es un objeto 
+                    const msgProd = data.productName + " \n " + data.productPrice;
+                    alert(msgProd);
+                },
+                error: () => {
+                    alert('Error');
+                }
+            });
+        };
+
+
+
+
+
+
+
+
+        //VERSION ANTIGUA DE CREAR FUNCIONES 
+        // function DeleteProduct(id){
+
+        //     if (!confirm("Esta seguro que desea eliminar el registro?")) return;
+
+        //     $.ajax({
+        //         type: "GET",
+        //         url: '@Url.Action("DeleteProd", "Product")' + '/' + id,
+        //         success: function (data) {
+        //             alert(data); //Esa data es el JSon que se coloco en el return del metodo
+        //         },
+        //         error: function () {
+        //             alert("Algo salio mal");
+        //         }
+            
+            
+        //     });
+        //}
+
+    </script>
+
+
+}
 

@@ -20,7 +20,7 @@ namespace ClaseSemana04.Controllers
         public IActionResult List()
         {
             //No olvidar que el listResult es un objeto de base de datos y no se puede enviar asi no mas
-            //Se debe crear un model que haga reflejo a ese objeto
+            //Se debe crear un model que haga reflejo a ese objeto (en este caso, el ProductViewModel en la carpeta Models)
             var listResult = _productContext.Products.ToList();
 
             ProductListViewModel model = new ProductListViewModel();
@@ -41,14 +41,14 @@ namespace ClaseSemana04.Controllers
 
         public IActionResult Add()
         {
-            ProductViewModel model = new ProductViewModel();    
+            ProductViewModel model = new ProductViewModel();
             return View(model);
         }
 
+        //AQUI VA LA LOGICA PARA AGREGAR 
+        [HttpPost]
         public IActionResult AddSaveAction(ProductViewModel model)
         {
-            //AQUI VA LA LOGICA PARA AGREGAR 
-
             ProductEntity entity = new ProductEntity();
             entity.Name = model.Name;
             //Se les pone HasValue porque en PreductViewModel se puso que podian ser nulos (por conveniencia)
@@ -63,12 +63,67 @@ namespace ClaseSemana04.Controllers
             return RedirectToAction("List", "Product");
         }
 
-        public IActionResult Edit()
+        public IActionResult Edit(int id)   
         {
+            //Se usa LinQ para extraer el modelo, siempre lo trae como lista
+            //Se debe convertir SingleOrDefault trae un objeto o un objeto vacio por defecto
+            var findProduct = _productContext.Products.Where(c => c.Id == id).SingleOrDefault();
+
+            //Ahora que se trajo el modelo de la base de datos, se debe convertir al modelo en Proyecto ProductViewModel
+
             var model = new ProductViewModel();
+            model.Id = findProduct.Id;
+            model.Name = findProduct.Name;  
+            model.Price = findProduct.Price;    
+            model.Stock = findProduct.Stock;
+
+
             return View(model);
         }
 
-       
+        [HttpPost] //Es buena practica colocar el Verbo HTTP
+        public IActionResult EditSaved(ProductViewModel model)
+        {
+            //Mismo metodo, pero de otra forma (sin poner Where)
+            var findProduct = _productContext.Products.SingleOrDefault(c => c.Id == model.Id);
+            if(findProduct != null)
+            {
+                findProduct.Name = model.Name;
+                findProduct.Price = model.Price.HasValue?model.Price.Value:0; //Si tiene valor nulo, ponerle valor del formulario o cero
+                findProduct.Stock = model.Stock.HasValue ? model.Stock.Value : 0;
+                _productContext.SaveChanges();
+
+                //Si se deja asi no mas, tratara de enviarlo a la ista  EditSaved
+                //Se tiene que reenviar a una vista 
+                return RedirectToAction("List", "Product");
+
+            }
+
+            // Esto puede ser una opcion si se quiere mantener en la misma vista return View("Edit", model);
+            //Sino se deja solo en el model y se deriva al List con el metodo de arriba
+            return View(model);
+        }
+
+        [HttpGet]
+        public JsonResult DeleteProd(int id)
+        {
+            var findProduct = _productContext.Products.SingleOrDefault(c => c.Id == id);
+            _productContext.Products.Remove(findProduct);
+            _productContext.SaveChanges();
+            return Json("Se elimino de manera correcta");
+        }
+
+
+        [HttpGet]
+        public JsonResult GetProductDetail(int id)
+        {
+            var product = _productContext.Products.Where(c => c.Id == id).SingleOrDefault();
+            return Json(new
+            {
+                ProductName = product.Name,
+                ProductPrice = product.Price,
+                ProductStock = product.Stock
+            });
+        }
     }
 }

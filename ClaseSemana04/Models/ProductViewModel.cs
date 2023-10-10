@@ -15,6 +15,7 @@ namespace ClaseSemana04.Models
     }
     public class ProductViewModel
     {
+        [DisplayName("Codigo")]
         public int Id { get; set; }
         public DateTime DateAdded { get; set; }
         public string Status { get; set; }
